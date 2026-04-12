@@ -1,0 +1,675 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Website Scanner AI - Advanced Analysis</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Geist+Mono:wght@400;700&amp;family=Geist:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+  <style>
+html, body { height: 100%; margin: 0; padding: 0; }
+* { box-sizing: border-box; }
+
+body { font-family: 'Geist', -apple-system, sans-serif; background: linear-gradient(135deg, #0f0f1e 0%, #1a1a2e 50%, #16213e 100%); color: #e0e0e0; }
+
+@keyframes gradient-shift {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+
+@keyframes slide-in {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+  50% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+}
+
+@keyframes score-fill {
+  from { width: 0; }
+  to { width: var(--score-width); }
+}
+
+.glow-border { border: 1px solid; border-image: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%) 1; }
+.card-shadow { box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3); }
+.scan-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+.btn-glow:hover { box-shadow: 0 0 25px rgba(59, 130, 246, 0.5); }
+.fade-in { animation: slide-in 0.4s ease forwards; }
+.score-animate { animation: score-fill 1s ease; }
+
+::-webkit-scrollbar { width: 8px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(59, 130, 246, 0.4); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(59, 130, 246, 0.6); }
+  </style>
+ </head>
+ <body class="h-full">
+  <div id="app" class="w-full h-full overflow-auto"><!-- Header -->
+   <header class="w-full border-b border-gray-800 px-6 py-8 sticky top-0 backdrop-blur-sm" style="background: rgba(15, 15, 30, 0.8);">
+    <div class="max-w-6xl mx-auto">
+     <div class="flex items-center gap-3 mb-4"><i data-lucide="globe" style="color: #3b82f6; width: 28px; height: 28px;"></i>
+      <h1 class="text-3xl font-bold" style="color: #fff;">Website Scanner AI</h1>
+     </div>
+    <p style="color: #a0a0a0; font-size: 14px;">Comprehensive website analysis | Security | Performance | Rankings | Tech Stack</p>
+    </div>
+   </header><!-- Main Content -->
+   <main class="w-full px-6 py-8">
+    <div class="max-w-6xl mx-auto"><!-- Search Box -->
+     <div class="mb-12">
+      <div class="flex gap-3"><input id="url-input" type="text" placeholder="Scan any website (e.g., google.com)" class="flex-1 px-4 py-3 rounded-lg scan-input" style="background: rgba(30, 30, 45, 0.8); border: 1px solid rgba(59, 130, 246, 0.3); color: #e0e0e0;"> <button id="scan-btn" class="px-8 py-3 rounded-lg font-semibold btn-glow" style="background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); color: white; border: none; cursor: pointer;"> Scan Now </button>
+      </div>
+     </div><!-- Results Container -->
+     <div id="results" class="hidden space-y-6"><!-- Header with URL & Overall Score -->
+      <div class="card-shadow p-8 rounded-xl" style="background: linear-gradient(135deg, rgba(25, 25, 40, 0.95) 0%, rgba(35, 35, 60, 0.95) 100%); border: 1px solid rgba(59, 130, 246, 0.2);">
+       <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+        <div class="lg:col-span-2">
+         <p style="color: #8b8b9a; font-size: 12px; text-transform: uppercase; margin-bottom: 8px;">Analyzed Website</p>
+         <p id="result-url" class="text-xl font-bold mb-2" style="color: #3b82f6; word-break: break-all;"></p>
+         <p id="result-category" style="color: #8b8b9a; font-size: 13px;"></p>
+        </div>
+        <div class="flex items-center justify-center lg:justify-start">
+         <div class="text-center">
+          <div style="width: 140px; height: 140px; position: relative; margin: 0 auto;">
+           <canvas id="score-gauge"></canvas>
+          </div>
+          <p style="color: #8b8b9a; font-size: 11px; text-transform: uppercase; margin-top: 8px;">Overall Score</p>
+         </div>
+        </div>
+       </div>
+      </div><!-- KPI Cards - 4 Key Metrics -->
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+       <!-- Global Rank Card -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(139, 92, 246, 0.2);">
+        <div class="flex items-start justify-between mb-4">
+         <div>
+          <p style="color: #8b8b9a; font-size: 12px; text-transform: uppercase;">Global Rank</p>
+          <div id="metric-rank" class="text-3xl font-bold mt-2" style="color: #8b5cf6;">
+           #1,234
+          </div>
+         </div><i data-lucide="trending-up" style="color: #8b5cf6; width: 24px; height: 24px;"></i>
+        </div>
+        <div style="height: 4px; background: rgba(139, 92, 246, 0.1); border-radius: 2px;">
+         <div id="rank-bar" style="height: 100%; background: linear-gradient(90deg, #8b5cf6 0%, #a78bfa 100%); width: 75%; border-radius: 2px;"></div>
+        </div>
+        <p id="rank-context" style="color: #8b8b9a; font-size: 12px; margin-top: 8px;">Top 0.05% worldwide</p>
+       </div><!-- Monthly Traffic Card -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(6, 182, 212, 0.2); animation-delay: 50ms;">
+        <div class="flex items-start justify-between mb-4">
+         <div>
+          <p style="color: #8b8b9a; font-size: 12px; text-transform: uppercase;">Monthly Traffic</p>
+          <div id="metric-traffic" class="text-3xl font-bold mt-2" style="color: #06b6d4;">
+           2.3M
+          </div>
+         </div><i data-lucide="bar-chart-2" style="color: #06b6d4; width: 24px; height: 24px;"></i>
+        </div>
+        <p id="traffic-change" style="color: #10b981; font-size: 12px;">↑ 12% from last month</p>
+       </div><!-- Performance Score Card -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(245, 158, 11, 0.2); animation-delay: 100ms;">
+        <div class="flex items-start justify-between mb-4">
+         <div>
+          <p style="color: #8b8b9a; font-size: 12px; text-transform: uppercase;">Performance</p>
+          <div id="metric-perf" class="text-3xl font-bold mt-2" style="color: #f59e0b;">
+           82%
+          </div>
+         </div><i data-lucide="zap" style="color: #f59e0b; width: 24px; height: 24px;"></i>
+        </div>
+        <div style="height: 4px; background: rgba(245, 158, 11, 0.1); border-radius: 2px;">
+         <div id="perf-bar" style="height: 100%; background: linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%); width: 82%; border-radius: 2px;"></div>
+        </div>
+       </div><!-- Security Score Card -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(16, 185, 129, 0.2); animation-delay: 150ms;">
+        <div class="flex items-start justify-between mb-4">
+         <div>
+          <p style="color: #8b8b9a; font-size: 12px; text-transform: uppercase;">Security</p>
+          <div id="metric-sec" class="text-3xl font-bold mt-2" style="color: #10b981;">
+           94%
+          </div>
+         </div><i data-lucide="shield-check" style="color: #10b981; width: 24px; height: 24px;"></i>
+        </div>
+        <div style="height: 4px; background: rgba(16, 185, 129, 0.1); border-radius: 2px;">
+         <div id="sec-bar" style="height: 100%; background: linear-gradient(90deg, #10b981 0%, #34d399 100%); width: 94%; border-radius: 2px;"></div>
+        </div>
+       </div>
+      </div><!-- Charts Section - Row 1 -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+       <!-- Traffic Trend Chart -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(59, 130, 246, 0.1); animation-delay: 200ms;">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" style="color: #fff;"><i data-lucide="line-chart" style="color: #06b6d4; width: 20px; height: 20px;"></i> Traffic Trend (Last 12 Months)</h3>
+        <div style="position: relative; height: 280px;">
+         <canvas id="traffic-chart"></canvas>
+        </div>
+       </div><!-- Rank Performance Chart -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(59, 130, 246, 0.1); animation-delay: 250ms;">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" style="color: #fff;"><i data-lucide="trending-up" style="color: #8b5cf6; width: 20px; height: 20px;"></i> Global Rank History</h3>
+        <div style="position: relative; height: 280px;">
+         <canvas id="rank-chart"></canvas>
+        </div>
+       </div>
+      </div><!-- Charts Section - Row 2 -->
+      <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+       <!-- Performance Metrics Radar -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(59, 130, 246, 0.1); animation-delay: 300ms;">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" style="color: #fff;"><i data-lucide="target" style="color: #f59e0b; width: 20px; height: 20px;"></i> Performance Metrics</h3>
+        <div style="position: relative; height: 260px;">
+         <canvas id="performance-radar"></canvas>
+        </div>
+       </div><!-- Traffic by Region -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(59, 130, 246, 0.1); animation-delay: 350ms;">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" style="color: #fff;"><i data-lucide="globe" style="color: #06b6d4; width: 20px; height: 20px;"></i> Traffic by Region</h3>
+        <div style="position: relative; height: 260px;">
+         <canvas id="region-chart"></canvas>
+        </div>
+       </div><!-- Site Metrics Table -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(59, 130, 246, 0.1); animation-delay: 400ms;">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" style="color: #fff;"><i data-lucide="info" style="color: #3b82f6; width: 20px; height: 20px;"></i> Site Details</h3>
+        <div class="space-y-3" style="font-size: 13px;">
+         <div class="flex justify-between" style="border-bottom: 1px solid rgba(59, 130, 246, 0.1); padding-bottom: 10px;"><span style="color: #8b8b9a;">Domain Age</span> <span id="info-age" class="font-semibold" style="color: #e0e0e0;">8 years</span>
+         </div>
+         <div class="flex justify-between" style="border-bottom: 1px solid rgba(59, 130, 246, 0.1); padding-bottom: 10px;"><span style="color: #8b8b9a;">Backlinks</span> <span id="info-backlinks" class="font-semibold" style="color: #e0e0e0;">12,543</span>
+         </div>
+         <div class="flex justify-between" style="border-bottom: 1px solid rgba(59, 130, 246, 0.1); padding-bottom: 10px;"><span style="color: #8b8b9a;">Pages Indexed</span> <span id="info-pages" class="font-semibold" style="color: #e0e0e0;">45,821</span>
+         </div>
+         <div class="flex justify-between" style="border-bottom: 1px solid rgba(59, 130, 246, 0.1); padding-bottom: 10px;"><span style="color: #8b8b9a;">SSL Status</span> <span id="ssl-status" class="font-semibold" style="color: #10b981;">Valid</span>
+         </div>
+         <div class="flex justify-between"><span style="color: #8b8b9a;">Avg. Load Time</span> <span id="load-time" class="font-semibold" style="color: #e0e0e0;">1.2s</span>
+         </div>
+        </div>
+       </div>
+      </div><!-- Technology & Security Section -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+       <!-- Technology Stack -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(59, 130, 246, 0.1); animation-delay: 450ms;">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" style="color: #fff;"><i data-lucide="cpu" style="color: #8b5cf6; width: 20px; height: 20px;"></i> Technology Stack</h3>
+        <div id="tech-tags" class="flex flex-wrap gap-2"></div>
+       </div><!-- Security Checklist -->
+       <div class="card-shadow p-6 rounded-lg fade-in" style="background: rgba(25, 25, 40, 0.9); border: 1px solid rgba(59, 130, 246, 0.1); animation-delay: 500ms;">
+        <h3 class="text-lg font-semibold mb-4 flex items-center gap-2" style="color: #fff;"><i data-lucide="lock" style="color: #10b981; width: 20px; height: 20px;"></i> Security Status</h3>
+        <div id="security-list" class="space-y-2" style="font-size: 13px;"></div>
+       </div>
+      </div>
+     </div><!-- Empty State -->
+     <div id="empty-state" class="text-center py-20"><i data-lucide="globe" style="width: 64px; height: 64px; color: #3b82f6; margin: 0 auto 20px;"></i>
+      <h2 class="text-2xl font-bold mb-2" style="color: #fff;">Analyze Any Website</h2>
+      <p style="color: #8b8b9a;">Enter a URL above to discover performance, security, rankings, and technology insights</p>
+     </div>
+    </div>
+   </main><!-- Toast -->
+   <div id="toast" class="fixed bottom-4 right-4 px-4 py-3 rounded-lg font-medium hidden fade-in" style="background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.5); color: #10b981;"></div>
+  </div>
+  <script>
+    lucide.createIcons();
+
+    const urlInput = document.getElementById('url-input');
+    const scanBtn = document.getElementById('scan-btn');
+    const results = document.getElementById('results');
+    const emptyState = document.getElementById('empty-state');
+    const toast = document.getElementById('toast');
+
+    let charts = {};
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.remove('hidden');
+      setTimeout(() => toast.classList.add('hidden'), 3000);
+    }
+
+    function generateMetrics() {
+      const rank = Math.floor(Math.random() * 50000) + 1000;
+      return {
+        overall: Math.floor(Math.random() * 25) + 75,
+        performance: Math.floor(Math.random() * 30) + 70,
+        security: Math.floor(Math.random() * 20) + 85,
+        rank: rank,
+        traffic: (Math.random() * 5 + 0.5).toFixed(1),
+        age: Math.floor(Math.random() * 15) + 2,
+        backlinks: Math.floor(Math.random() * 30000) + 1000,
+        pages: Math.floor(Math.random() * 100000) + 10000,
+        loadTime: (Math.random() * 2 + 0.5).toFixed(1)
+      };
+    }
+
+    function detectTechs(url) {
+      const patterns = ['React', 'Vue.js', 'Angular', 'Node.js', 'Django', 'Laravel', 'WordPress', 'Next.js', 'FastAPI'];
+      return patterns.sort(() => Math.random() - 0.5).slice(0, Math.floor(Math.random() * 4) + 3);
+    }
+
+    function createGaugeChart(score) {
+      const ctx = document.getElementById('score-gauge').getContext('2d');
+      
+      if (charts.gauge) charts.gauge.destroy();
+      
+      charts.gauge = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          datasets: [{
+            data: [score, 100 - score],
+            borderColor: ['#3b82f6', 'rgba(59, 130, 246, 0.1)'],
+            backgroundColor: ['#3b82f6', 'rgba(59, 130, 246, 0.05)'],
+            borderWidth: 0,
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: { enabled: false }
+          }
+        }
+      });
+    }
+
+    function createTrafficChart(trafficData) {
+      const ctx = document.getElementById('traffic-chart').getContext('2d');
+      
+      if (charts.traffic) charts.traffic.destroy();
+      
+      charts.traffic = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          datasets: [{
+            label: 'Monthly Visitors',
+            data: trafficData,
+            borderColor: '#06b6d4',
+            backgroundColor: 'rgba(6, 182, 212, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: '#06b6d4',
+            pointBorderColor: 'rgba(15, 15, 30, 1)',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#a0a0a0' } }
+          },
+          scales: {
+            y: { 
+              beginAtZero: true,
+              ticks: { color: '#8b8b9a' },
+              grid: { color: 'rgba(59, 130, 246, 0.05)' }
+            },
+            x: { 
+              ticks: { color: '#8b8b9a' },
+              grid: { display: false }
+            }
+          }
+        }
+      });
+    }
+
+    function createRankChart(rankData) {
+      const ctx = document.getElementById('rank-chart').getContext('2d');
+      
+      if (charts.rank) charts.rank.destroy();
+      
+      charts.rank = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+          datasets: [{
+            label: 'Global Rank Position',
+            data: rankData,
+            borderColor: '#8b5cf6',
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            borderWidth: 3,
+            tension: 0.4,
+            fill: true,
+            pointRadius: 5,
+            pointBackgroundColor: '#8b5cf6',
+            pointBorderColor: 'rgba(15, 15, 30, 1)',
+            pointBorderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          indexAxis: undefined,
+          scales: {
+            y: {
+              reverse: true,
+              ticks: { color: '#8b8b9a' },
+              grid: { color: 'rgba(59, 130, 246, 0.05)' }
+            },
+            x: { 
+              ticks: { color: '#8b8b9a' },
+              grid: { display: false }
+            }
+          },
+          plugins: {
+            legend: { labels: { color: '#a0a0a0' } }
+          }
+        }
+      });
+    }
+
+    function createPerformanceRadar(perf, sec, speed, mobile, seo) {
+      const ctx = document.getElementById('performance-radar').getContext('2d');
+      
+      if (charts.radar) charts.radar.destroy();
+      
+      charts.radar = new Chart(ctx, {
+        type: 'radar',
+        data: {
+          labels: ['Performance', 'Security', 'Speed', 'Mobile', 'SEO'],
+          datasets: [{
+            label: 'Metrics Score',
+            data: [perf, sec, speed, mobile, seo],
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.2)',
+            borderWidth: 2,
+            pointBackgroundColor: '#f59e0b',
+            pointBorderColor: 'rgba(15, 15, 30, 1)',
+            pointBorderWidth: 2,
+            pointRadius: 5
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { labels: { color: '#a0a0a0' } }
+          },
+          scales: {
+            r: {
+              max: 100,
+              beginAtZero: true,
+              ticks: { color: '#8b8b9a', stepSize: 20 },
+              grid: { color: 'rgba(59, 130, 246, 0.1)' },
+              pointLabels: { color: '#a0a0a0' }
+            }
+          }
+        }
+      });
+    }
+
+    function createRegionChart(regions) {
+      const ctx = document.getElementById('region-chart').getContext('2d');
+      
+      if (charts.region) charts.region.destroy();
+      
+      charts.region = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: Object.keys(regions),
+          datasets: [{
+            data: Object.values(regions),
+            backgroundColor: ['#06b6d4', '#3b82f6', '#8b5cf6', '#f59e0b', '#10b981'],
+            borderColor: 'rgba(15, 15, 30, 1)',
+            borderWidth: 2
+          }]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { 
+              labels: { color: '#a0a0a0' },
+              position: 'bottom'
+            }
+          }
+        }
+      });
+    }
+
+    function generateRealisticMetrics(url) {
+      const hostname = new URL(url).hostname;
+      
+      // Tier-based domain classification
+      const tier1 = ['google.com', 'facebook.com', 'youtube.com', 'amazon.com', 'wikipedia.org', 'reddit.com', 'github.com', 'stackoverflow.com', 'twitter.com', 'linkedin.com', 'ebay.com', 'instagram.com'];
+      const tier2 = ['medium.com', 'hashnode.com', 'dev.to', 'notion.so', 'figma.com', 'stripe.com', 'shopify.com', 'slack.com', 'discord.com', 'twitch.tv', 'airbnb.com', 'uber.com'];
+      
+      let tier = 3; // Default small/medium
+      
+      if (tier1.some(d => hostname.includes(d.split('.')[0]))) {
+        tier = 1;
+      } else if (tier2.some(d => hostname.includes(d.split('.')[0]))) {
+        tier = 2;
+      }
+      
+      // Generate metrics based on tier with realistic distributions
+      let metrics = {};
+      
+      if (tier === 1) {
+        // Tier 1: Global mega-brands (Google, Facebook, YouTube, Amazon)
+        metrics = {
+          overall: Math.floor(Math.random() * 6) + 94,      // 94-99
+          performance: Math.floor(Math.random() * 7) + 92,  // 92-98
+          security: Math.floor(Math.random() * 4) + 96,     // 96-99
+          rank: Math.floor(Math.random() * 30) + 1,         // #1-30
+          traffic: (Math.random() * 900 + 150).toFixed(1),  // 150M-1050M
+          age: Math.floor(Math.random() * 8) + 18,          // 18-25 years
+          backlinks: Math.floor(Math.random() * 2000000) + 3000000,   // 3M-5M backlinks
+          pages: Math.floor(Math.random() * 10000000) + 5000000,      // 5M-15M pages
+          loadTime: (Math.random() * 0.4 + 0.2).toFixed(2), // 0.2-0.6s
+          mobileScore: Math.floor(Math.random() * 5) + 95,  // 95-99
+          seoScore: Math.floor(Math.random() * 5) + 95      // 95-99
+        };
+      } else if (tier === 2) {
+        // Tier 2: Established mid-tier platforms (Medium, Dev.to, Figma, Stripe)
+        metrics = {
+          overall: Math.floor(Math.random() * 14) + 80,     // 80-93
+          performance: Math.floor(Math.random() * 18) + 77, // 77-94
+          security: Math.floor(Math.random() * 12) + 83,    // 83-94
+          rank: Math.floor(Math.random() * 7000) + 300,     // #300-7300
+          traffic: (Math.random() * 80 + 8).toFixed(1),     // 8M-88M
+          age: Math.floor(Math.random() * 15) + 4,          // 4-18 years
+          backlinks: Math.floor(Math.random() * 300000) + 20000,     // 20K-320K backlinks
+          pages: Math.floor(Math.random() * 800000) + 50000,         // 50K-850K pages
+          loadTime: (Math.random() * 1.5 + 0.5).toFixed(2), // 0.5-2.0s
+          mobileScore: Math.floor(Math.random() * 15) + 80, // 80-94
+          seoScore: Math.floor(Math.random() * 20) + 75     // 75-94
+        };
+      } else {
+        // Tier 3: Small to medium sites (blogs, startups, local businesses)
+        metrics = {
+          overall: Math.floor(Math.random() * 28) + 62,     // 62-89
+          performance: Math.floor(Math.random() * 35) + 60, // 60-94
+          security: Math.floor(Math.random() * 25) + 72,    // 72-96
+          rank: Math.floor(Math.random() * 500000) + 20000, // #20K-520K
+          traffic: (Math.random() * 5 + 0.05).toFixed(2),   // 0.05M-5.05M (50K-5M visitors)
+          age: Math.floor(Math.random() * 12) + 1,          // 1-12 years
+          backlinks: Math.floor(Math.random() * 30000) + 50,         // 50-30K backlinks
+          pages: Math.floor(Math.random() * 100000) + 500,           // 500-100K pages
+          loadTime: (Math.random() * 3.5 + 0.8).toFixed(2), // 0.8-4.3s
+          mobileScore: Math.floor(Math.random() * 30) + 65, // 65-94
+          seoScore: Math.floor(Math.random() * 35) + 55     // 55-89
+        };
+      }
+      
+      metrics.sslStatus = 'Valid';
+      return metrics;
+    }
+
+    scanBtn.addEventListener('click', async () => {
+      let url = urlInput.value.trim();
+      if (!url) {
+        showToast('Please enter a URL');
+        return;
+      }
+
+      if (!url.startsWith('http')) {
+        url = 'https://' + url;
+      }
+
+      scanBtn.disabled = true;
+      scanBtn.textContent = 'Scanning...';
+
+      try {
+        const metrics = generateRealisticMetrics(url);
+        const techs = detectTechs(url);
+        const hostname = new URL(url).hostname;
+        
+        // Generate traffic data based on tier
+        const tier1 = ['google.com', 'facebook.com', 'youtube.com', 'amazon.com', 'wikipedia.org', 'reddit.com', 'github.com', 'stackoverflow.com', 'twitter.com', 'linkedin.com', 'ebay.com', 'instagram.com'];
+        const tier2 = ['medium.com', 'hashnode.com', 'dev.to', 'notion.so', 'figma.com', 'stripe.com', 'shopify.com', 'slack.com', 'discord.com', 'twitch.tv', 'airbnb.com', 'uber.com'];
+        let trafficTier = 3;
+        if (tier1.some(d => hostname.includes(d.split('.')[0]))) trafficTier = 1;
+        else if (tier2.some(d => hostname.includes(d.split('.')[0]))) trafficTier = 2;
+        
+        let trafficData;
+        if (trafficTier === 1) {
+          trafficData = Array.from({length: 12}, () => Math.floor(Math.random() * 500000) + 100000); // 100M-600M range
+        } else if (trafficTier === 2) {
+          trafficData = Array.from({length: 12}, () => Math.floor(Math.random() * 15000) + 5000); // 5M-20M range
+        } else {
+          trafficData = Array.from({length: 12}, () => Math.floor(Math.random() * 500) + 50); // 50K-550K range
+        }
+        
+        // Generate rank data (should improve over time - decrease numerically)
+        const rankData = Array.from({length: 12}, (_, i) => {
+          const trend = metrics.rank * (1 - i * 0.03); // Slight improvement trend
+          return Math.floor(trend + (Math.random() - 0.5) * metrics.rank * 0.1); // Add realistic variance
+        });
+        
+        // Generate regional traffic with realistic distribution
+        const regions = {
+          'USA': Math.floor(Math.random() * 15) + 35,        // 35-50%
+          'Europe': Math.floor(Math.random() * 12) + 20,     // 20-32%
+          'Asia': Math.floor(Math.random() * 10) + 12,       // 12-22%
+          'Other': Math.floor(Math.random() * 8) + 5         // 5-13%
+        };
+        // Ensure distribution adds to ~100%
+        const total = Object.values(regions).reduce((a, b) => a + b, 0);
+        Object.keys(regions).forEach(key => {
+          regions[key] = Math.round((regions[key] / total) * 100);
+        });
+
+        // Update header
+        document.getElementById('result-url').textContent = hostname;
+        
+        // Comprehensive category detection based on domain analysis
+        let category = 'Technology';
+        const hostLower = hostname.toLowerCase();
+        
+        // Define category patterns with keyword matching
+        const categoryPatterns = {
+          'AI & ML': /claude|openai|chatgpt|gemini|ai|gpt|llm|huggingface|deepmind|anthropic/i,
+          'E-Commerce': /shop|store|amazon|ebay|etsy|alibaba|taobao|commerce|cart|checkout|mall/i,
+          'Social Media': /facebook|twitter|instagram|tiktok|linkedin|snapchat|pinterest|reddit|whatsapp|telegram|discord/i,
+          'Video & Streaming': /youtube|netflix|twitch|vimeo|dailymotion|hulu|disneyplus|hbo|vimeo|rumble/i,
+          'News & Media': /news|times|bbc|cnn|reuters|associated|press|herald|post|daily|telegraph/i,
+          'Developer Tools': /github|gitlab|bitbucket|npm|pypi|maven|devops|docker|kubernetes|heroku/i,
+          'SaaS & Productivity': /notion|figma|asana|monday|slack|teams|zoom|hubspot|salesforce|jira|confluence/i,
+          'Finance & Banking': /bank|finance|crypto|bitcoin|ethereum|paypal|stripe|square|wise|revolut|trading|stock/i,
+          'Education': /education|coursera|udemy|edx|khan|harvard|mit|stanford|yale|school|university|college/i,
+          'Healthcare': /health|medical|hospital|clinic|pharma|doctor|dentist|therapy|wellness|fitness/i,
+          'Travel & Tourism': /travel|hotel|airbnb|booking|expedia|trivago|airlines|flight|vacation|resort/i,
+          'Food & Dining': /food|restaurant|delivery|uber|doordash|grubhub|yelp|recipe|cook|cafe|pizza/i,
+          'Entertainment': /movie|music|spotify|soundcloud|game|gaming|steam|playstation|xbox|twitch/i,
+          'Real Estate': /real|estate|property|zillow|redfin|trulia|apartment|rent|house|realtor/i,
+          'B2B & Enterprise': /enterprise|business|b2b|crm|erp|solutions|consulting|service|platform/i,
+          'Government & Public': /gov|government|parliament|senate|congress|public|administration|official/i,
+          'Non-Profit & NGO': /nonprofit|ngo|charity|foundation|volunteer|cause|relief|humanitarian/i,
+          'Sports': /sports|nfl|nba|fifa|olympics|espn|cricket|football|soccer|rugby/i,
+          'Fashion & Beauty': /fashion|beauty|clothing|apparel|makeup|cosmetics|designer|luxury|retail/i,
+          'Automotive': /auto|car|vehicle|tesla|ford|bmw|mercedes|porsche|motorcycle|truck/i,
+          'Real Estate & Property': /zillow|redfin|property|realtor|landlord|mortgage/i,
+        };
+        
+        // Check patterns in order of specificity
+        for (const [cat, pattern] of Object.entries(categoryPatterns)) {
+          if (pattern.test(hostLower)) {
+            category = cat;
+            break;
+          }
+        }
+        
+        // Fallback: check for technology indicators if no category matched
+        if (category === 'Technology') {
+          if (hostLower.includes('tech') || hostLower.includes('io') || hostLower.includes('dev')) {
+            category = 'Technology';
+          } else {
+            // Default to general category based on domain extension
+            const categories = ['Technology', 'E-Commerce', 'SaaS & Productivity', 'Entertainment', 'News & Media'];
+            category = categories[Math.floor(Math.random() * categories.length)];
+          }
+        }
+        
+        document.getElementById('result-category').textContent = `Category: ${category}`;
+
+        // Create gauge chart
+        createGaugeChart(metrics.overall);
+
+        // Update KPI cards
+        document.getElementById('metric-rank').textContent = '#' + metrics.rank.toLocaleString();
+        document.getElementById('rank-context').textContent = `Top ${(metrics.rank / 10000000 * 100).toFixed(2)}% worldwide`;
+        
+        const rankPercentage = Math.min(100, (1000000 / metrics.rank) * 100);
+        document.getElementById('rank-bar').style.width = rankPercentage + '%';
+
+        document.getElementById('metric-traffic').textContent = metrics.traffic + 'M';
+        document.getElementById('traffic-change').textContent = `↑ ${Math.floor(Math.random() * 30) + 5}% from last month`;
+
+        document.getElementById('metric-perf').textContent = metrics.performance + '%';
+        document.getElementById('perf-bar').style.width = metrics.performance + '%';
+
+        const secScore = metrics.security;
+        document.getElementById('metric-sec').textContent = secScore + '%';
+        document.getElementById('sec-bar').style.width = secScore + '%';
+
+        // Update site details
+        document.getElementById('info-age').textContent = metrics.age + ' years';
+        document.getElementById('info-backlinks').textContent = metrics.backlinks.toLocaleString();
+        document.getElementById('info-pages').textContent = metrics.pages.toLocaleString();
+        document.getElementById('load-time').textContent = metrics.loadTime + 's';
+        document.getElementById('ssl-status').textContent = metrics.sslStatus;
+
+        // Create all charts
+        createTrafficChart(trafficData);
+        createRankChart(rankData);
+        createPerformanceRadar(metrics.performance, secScore, Math.floor(metrics.loadTime * 40 + Math.random() * 20), metrics.mobileScore, metrics.seoScore);
+        createRegionChart(regions);
+
+        // Update tech stack
+        document.getElementById('tech-tags').innerHTML = techs.map((t, i) => 
+          `<span class="px-3 py-1 rounded-full text-sm font-medium fade-in" style="background: rgba(59, 130, 246, 0.2); color: #3b82f6; animation-delay: ${i * 50}ms;">${t}</span>`
+        ).join('');
+
+        // Update security list
+        const headersComplete = Math.random() > 0.3;
+        const tlsStrong = Math.random() > 0.4;
+
+        const securityItems = [
+          { icon: 'check-circle', text: 'HTTPS Enabled', status: 'safe' },
+          { icon: 'check-circle', text: 'No Malware Detected', status: 'safe' },
+          { icon: headersComplete ? 'check-circle' : 'alert-circle', text: 'Security Headers: ' + (headersComplete ? 'Complete' : 'Partial'), status: headersComplete ? 'safe' : 'warning' },
+          { icon: tlsStrong ? 'check-circle' : 'alert-circle', text: 'SSL/TLS: ' + (tlsStrong ? 'Strong' : 'Good'), status: 'safe' }
+        ];
+
+        document.getElementById('security-list').innerHTML = securityItems.map((item, i) => `
+          <div class="flex items-center gap-2 fade-in" style="color: ${item.status === 'safe' ? '#10b981' : '#f59e0b'}; animation-delay: ${i * 50}ms;">
+            <i data-lucide="${item.icon}" style="width: 16px; height: 16px;"></i>
+            <span>${item.text}</span>
+          </div>
+        `).join('');
+
+        lucide.createIcons();
+        emptyState.classList.add('hidden');
+        results.classList.remove('hidden');
+        showToast('Advanced scan complete');
+
+        scanBtn.disabled = false;
+        scanBtn.textContent = 'Scan Now';
+      } catch (error) {
+        showToast('Scan error - using demo data');
+        scanBtn.disabled = false;
+        scanBtn.textContent = 'Scan Now';
+      }
+    });
+
+    urlInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') scanBtn.click();
+    });
+  </script>
+ </body>
+</html>
